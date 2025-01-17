@@ -2,6 +2,7 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
+
 # 复制所需文件到容器中
 COPY ./app /app/app
 COPY ./requirements.txt /app
