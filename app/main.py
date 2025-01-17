@@ -2,6 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.logger import get_main_logger
 
+
+
+
 from app.api import gemini_routes, openai_routes
 import uvicorn
 
