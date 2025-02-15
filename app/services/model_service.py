@@ -2,9 +2,9 @@ import requests
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 from app.core.logger import get_model_logger
+from app.core.config import settings
 
 logger = get_model_logger()
-
 
 class ModelService:
     def __init__(self, model_search: list):
@@ -58,4 +58,8 @@ class ModelService:
                 search_model["id"] = f"{model_id}-search"
                 openai_format["data"].append(search_model)
 
+        if settings.CREATE_IMAGE_MODEL:
+            image_model = openai_model.copy()
+            image_model["id"] = f"{settings.CREATE_IMAGE_MODEL}-chat"
+            openai_format["data"].append(image_model)
         return openai_format

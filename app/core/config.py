@@ -12,6 +12,11 @@ class Settings(BaseSettings):
     SHOW_THINKING_PROCESS: bool = True
     AUTH_TOKEN: str = ""
     MAX_FAILURES: int = 3
+    PAID_KEY: str = ""
+    CREATE_IMAGE_MODEL: str = "imagen-3.0-generate-002"
+    UPLOAD_PROVIDER: str = "smms"
+    SMMS_SECRET_TOKEN: str = ""
+    TEST_MODEL: str = "gemini-1.5-flash"
 
     def __init__(self):
         super().__init__()

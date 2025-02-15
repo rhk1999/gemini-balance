@@ -4,11 +4,11 @@
 
 ## 📝 项目简介
 
-本项目是一个基于 FastAPI 框架开发的高性能、易于部署的 OpenAI 和 Gemini API 代理服务。它不仅兼容 OpenAI 的 API 接口，还支持 Google 的 Gemini 模型，为用户提供灵活的模型选择。该代理服务内置了多 API Key 轮询、负载均衡、自动重试、访问控制（Bearer Token 认证）、流式响应等功能，旨在简化 AI 应用的开发和部署流程。
+本项目是一个基于 FastAPI 框架开发的高性能、易于部署的Gemini OpenAI兼容 和 Gemini API 代理服务。它不仅兼容 OpenAI 的 API 接口，还支持 Google 的 Gemini 原生接口。该代理服务内置了多 API Key 轮询、负载均衡、自动重试、访问控制（Bearer Token 认证）、流式响应等功能，旨在简化 AI 应用的开发和部署流程。
 
 **核心功能与优势:**
 
-- **多模型支持**: 无缝切换 OpenAI 和 Gemini 模型。
+- **多协议支持**: 无缝切换 OpenAI兼容 和 Gemini 协议。
 - **智能 API Key 管理**: 自动轮询多个 API Key，实现负载均衡和故障转移。
 - **安全访问控制**: 使用 Bearer Token 进行身份验证，保护 API 访问。
 - **流式响应支持**: 提供实时的流式数据传输，提升用户体验。
@@ -16,6 +16,7 @@
 - **灵活配置**: 通过环境变量或 `.env` 文件轻松配置。
 - **易于部署**: 提供 Docker 一键部署，也支持手动部署。
 - **健康检查**: 提供健康检查接口，方便监控服务状态。
+- **图片生成支持**: 支持使用OpenAI的DALL-E模型生成图片
 
 ## 🛠️ 技术栈
 
@@ -38,8 +39,8 @@
 1. **克隆项目**:
 
     ```bash
-    git clone <your-repository-url>
-    cd <your-repository-name>
+    git clone https://github.com/snailyp/gemini-balance.git
+    cd gemini-balance
     ```
 
 2. **安装依赖**:
@@ -50,29 +51,90 @@
 
 3. **配置**:
 
-    创建 `.env` 文件，并配置以下环境变量：
+    创建 `.env` 文件，并按以下分类配置环境变量：
 
     ```env
-    API_KEYS=["your-gemini-api-key-1", "your-gemini-api-key-2"]  # 你的 Gemini API 密钥列表
-    ALLOWED_TOKENS=["your-access-token-1", "your-access-token-2"] # 允许访问的 Token 列表
-    BASE_URL="https://generativelanguage.googleapis.com/v1beta"  # Gemini API 基础 URL, 保持默认即可
-    MODEL_SEARCH=["gemini-2.0-flash-exp"]  # 启用搜索功能的模型列表
-    TOOLS_CODE_EXECUTION_ENABLED=false  # 是否启用代码执行工具, 默认为 false
-    SHOW_SEARCH_LINK=true # 是否显示搜索链接
-    SHOW_THINKING_PROCESS=true # 是否显示思考过程
-    AUTH_TOKEN=""  # 备用token, 如果不设置, 默认为 ALLOWED_TOKENS 的第一个
-    MAX_FAILURES=3 # 允许单个key失败的次数
+    # 基础配置
+    BASE_URL="https://generativelanguage.googleapis.com/v1beta"  # Gemini API 基础 URL，默认无需修改
+    MAX_FAILURES=3  # 允许单个key失败的次数，默认3次
+
+    # 认证与安全配置
+    API_KEYS=["your-gemini-api-key-1", "your-gemini-api-key-2"]  # Gemini API 密钥列表，用于负载均衡
+    ALLOWED_TOKENS=["your-access-token-1", "your-access-token-2"]  # 允许访问的 Token 列表
+    AUTH_TOKEN=""  # 超级管理员token，具有所有权限，默认使用 ALLOWED_TOKENS 的第一个
+
+    # 模型功能配置
+    MODEL_SEARCH=["gemini-2.0-flash-exp"]  # 支持搜索功能的模型列表
+    TOOLS_CODE_EXECUTION_ENABLED=false  # 是否启用代码执行工具，默认false
+    SHOW_SEARCH_LINK=true  # 是否在响应中显示搜索结果链接，默认true
+    SHOW_THINKING_PROCESS=true  # 是否显示模型思考过程，默认true
+
+    # 图片生成配置
+    PAID_KEY="your-paid-api-key"  # 付费版API Key，用于图片生成等高级功能
+    CREATE_IMAGE_MODEL="imagen-3.0-generate-002"  # 图片生成模型，默认使用imagen-3.0
+    
+    # 图片上传配置
+    UPLOAD_PROVIDER="smms"  # 图片上传提供商，目前支持smms
+    SMMS_SECRET_TOKEN="your-smms-token"  # SM.MS图床的API Token
     ```
 
-    - `API_KEYS`: 你的 Gemini API 密钥列表，支持多个 Key 轮询。
-    - `ALLOWED_TOKENS`: 允许访问的 Token 列表，用于 API 认证。
-    - `BASE_URL`: Gemini API 的基础 URL，通常不需要修改。
-    - `MODEL_SEARCH`: 启用搜索功能的模型列表。
-    - `TOOLS_CODE_EXECUTION_ENABLED`: 是否启用代码执行工具, 默认为 `false`。
-    - `SHOW_SEARCH_LINK`: 是否显示搜索结果链接（当使用搜索模型时）。
-    - `SHOW_THINKING_PROCESS`: 是否显示模型的"思考"过程（对于某些模型）。
-    - `AUTH_TOKEN`: 备用授权token, 如果不设置, 默认为 `ALLOWED_TOKENS` 的第一个。
-    - `MAX_FAILURES`: 允许单个 API Key 失败的次数，超过此次数后该 Key 将被标记为无效。
+   ### 配置说明
+
+   #### 基础配置
+
+    - `BASE_URL`: Gemini API 的基础 URL
+      - 默认值: `https://generativelanguage.googleapis.com/v1beta`
+      - 说明: 通常无需修改，除非 API 地址发生变化
+    - `MAX_FAILURES`: API Key 允许的最大失败次数
+      - 默认值: `3`
+      - 说明: 超过此次数后，Key 将被暂时标记为无效
+
+   #### 认证与安全配置
+
+    - `API_KEYS`: Gemini API 密钥列表
+      - 格式: JSON 数组字符串
+      - 用途: 支持多个 Key 轮询，实现负载均衡
+      - 建议: 至少配置 2 个 Key 以保证服务可用性
+    - `ALLOWED_TOKENS`: 访问令牌列表
+      - 格式: JSON 数组字符串
+      - 用途: 用于客户端认证
+      - 安全提示: 请使用足够复杂的令牌
+    - `AUTH_TOKEN`: 超级管理员令牌
+      - 可选配置，留空则使用 ALLOWED_TOKENS 的第一个
+      - 具有查看 API Key 状态等特权操作权限
+
+   #### 模型功能配置
+
+    - `MODEL_SEARCH`: 搜索功能支持的模型
+      - 默认值: `["gemini-2.0-flash-exp"]`
+      - 说明: 仅列表中的模型可使用搜索功能
+    - `TOOLS_CODE_EXECUTION_ENABLED`: 代码执行功能
+      - 默认值: `false`
+      - 安全提示: 生产环境建议禁用
+    - `SHOW_SEARCH_LINK`: 搜索结果链接显示
+      - 默认值: `true`
+      - 用途: 控制搜索结果中是否包含原始链接
+    - `SHOW_THINKING_PROCESS`: 思考过程显示
+      - 默认值: `true`
+      - 用途: 显示模型的推理过程，便于调试
+
+   #### 图片生成配置
+
+    - `PAID_KEY`: 付费版 API Key
+      - 用途: 用于图片生成等高级功能
+      - 说明: 需要单独申请的付费版 Key
+    - `CREATE_IMAGE_MODEL`: 图片生成模型
+      - 默认值: `imagen-3.0-generate-002`
+      - 说明: 当前支持的最新图片生成模型
+
+   #### 图片上传配置
+
+    - `UPLOAD_PROVIDER`: 图片上传服务提供商
+      - 默认值: `smms`
+      - 说明: 目前支持 SM.MS 图床
+    - `SMMS_SECRET_TOKEN`: SM.MS API Token
+      - 用途: 用于图片上传到 SM.MS 图床
+      - 获取方式: 需要在 SM.MS 官网注册并获取
 
 ### ▶️ 运行
 
@@ -106,15 +168,32 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 ### 认证
 
-所有 API 请求都需要在 Header 中添加 `Authorization` 字段，值为 `Bearer <your-token>`，其中 `<your-token>` 需要替换为你在 `.env` 文件中配置的 `ALLOWED_TOKENS` 中的一个。
+所有 API 请求都需要在 Header 中添加 `Authorization` 字段，值为 `Bearer <your-token>`，其中 `<your-token>` 需要替换为你在 `.env` 文件中配置的 `ALLOWED_TOKENS` 中的一个或者 `AUTH_TOKEN`。
 
-### 获取模型列表
+### API 路由
+
+本服务提供两种API路由：
+
+1. **OpenAI 兼容路由** (推荐)
+   - 基础路径: `/v1`
+   - 完全兼容OpenAI API格式
+   - 支持所有Gemini模型
+
+2. **Gemini 原生路由**
+   - 基础路径: `/gemini/v1beta` 或 `/v1beta`
+   - 遵循Google原生API格式
+   - 适用于需要直接使用Gemini API的场景
+
+### OpenAI兼容路由
+
+#### 获取模型列表
 
 - **URL**: `/v1/models`
 - **Method**: `GET`
 - **Header**: `Authorization: Bearer <your-token>`
+- **Response**: 返回支持的所有模型列表，包括最新的`gemini-2.0-flash-exp-search`等模型
 
-### 聊天补全 (Chat Completions)
+#### 聊天补全 (Chat Completions)
 
 - **URL**: `/v1/chat/completions`
 - **Method**: `POST`
@@ -140,11 +219,34 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     }
     ```
 
-  - `messages`: 消息列表，格式与 OpenAI API 相同。
-  - `model`: 模型名称，例如 `gemini-1.5-flash-002`。
-  - `stream`: 是否开启流式响应，`true` 或 `false`。
-  - `tools`: 使用的工具列表。
-  - 其他参数：与 OpenAI API 兼容的参数，如 `temperature`, `max_tokens` 等。
+  - `messages`: 消息列表，格式与 OpenAI API 相同
+  - `model`: 模型名称，支持所有Gemini模型，包括:
+    - `gemini-1.5-flash-002`: 快速响应模型
+    - `gemini-2.0-flash-exp`: 实验性快速响应模型
+    - `gemini-2.0-flash-exp-search`: 支持搜索功能的实验性模型
+  - `stream`: 是否开启流式响应，`true` 或 `false`
+  - `tools`: 使用的工具列表
+  - 其他参数：与 OpenAI API 兼容的参数，如 `temperature`, `max_tokens` 等
+
+### Gemini原生路由
+
+#### 获取模型列表
+
+- **URL**: `/gemini/v1beta/models` 或 `/v1beta/models`
+- **Method**: `GET`
+- **Header**: `Authorization: Bearer <your-token>`
+
+#### 生成内容
+
+- **URL**: `/gemini/v1beta/models/{model_name}:generateContent`
+- **Method**: `POST`
+- **Header**: `Authorization: Bearer <your-token>`
+
+#### 流式生成内容
+
+- **URL**: `/gemini/v1beta/models/{model_name}:streamGenerateContent`
+- **Method**: `POST`
+- **Header**: `Authorization: Bearer <your-token>`
 
 ### 获取词向量 (Embeddings)
 
@@ -168,12 +270,85 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 - **URL**: `/health`
 - **Method**: `GET`
 
-### 获取 API Key 列表
+### Web界面功能
+
+#### 验证页面 (auth.html)
+
+- **URL**: `/auth`
+- **说明**: 提供了一个简洁的Web界面用于验证访问令牌
+- **功能特点**:
+  - 现代化的渐变背景设计
+  - 响应式布局，完美支持移动端
+  - 毛玻璃效果的卡片设计
+  - 优雅的动画效果（淡入、滑动、悬浮）
+  - 安全的令牌验证机制
+  - 清晰的错误提示功能
+  - PWA支持，可安装为本地应用
+  - 底部版权信息和GitHub链接
+  - 支持暗色主题适配
+
+#### API密钥状态管理 (keys_status.html)
 
 - **URL**: `/v1/keys/list`
 - **Method**: `GET`
 - **Header**: `Authorization: Bearer <your-auth-token>`
-- **说明**: 只有使用 `AUTH_TOKEN` 才能访问此接口, 用于获取有效和无效的 API Key 列表。
+- **功能特点**:
+  - 只有使用 `AUTH_TOKEN` 才能访问此接口
+  - 分类展示API密钥状态（有效/无效）
+  - 可折叠的密钥列表分组
+  - 每个密钥显示:
+    - 状态标识（有效/无效）
+    - 密钥内容
+    - 失败次数统计
+  - 高级功能:
+    - 一键复制单个密钥
+    - 批量复制分组密钥（JSON格式）
+    - 实时刷新功能
+    - 回到顶部/底部快捷按钮
+  - 界面特性:
+    - 响应式设计，适配各种屏幕
+    - 优雅的动画效果
+    - 操作反馈（复制成功提示）
+    - PWA支持
+    - 暗色主题适配
+
+### 图片生成 (Image Generation)
+
+- **URL**: `/v1/images/generations`
+- **Method**: `POST`
+- **Header**: `Authorization: Bearer <your-auth-token>`
+- **说明**: Body示例和参数说明
+
+    ```json
+    {
+    "model": "dall-e-3",
+    "prompt": "{n:2} {ratio:16:9} 汉服美女",
+    "n": 1,
+    "size": "1024x1024"
+    }
+    ```
+
+    **Prompt参数说明:**
+
+    prompt支持通过特殊标记来控制生成参数：
+
+    1. 图片数量控制:
+       - 格式: `{n:数量}`
+       - 示例: `{n:2} 一只可爱的猫` - 生成2张图片
+       - 取值范围: 1-4
+       - 说明: 如果在prompt中指定了n，将覆盖请求body中的n参数
+
+    2. 图片比例控制:
+       - 格式: `{ratio:宽:高}`
+       - 示例: `{ratio:16:9} 一片森林` - 生成16:9比例的图片
+       - 支持的比例: "1:1"、"3:4"、"4:3"、"9:16"、"16:9"
+       - 说明: 如果指定了size参数，将优先使用size对应的比例
+
+    3. 参数组合:
+       - 示例: `{n:2} {ratio:16:9} 一片美丽的森林` - 生成2张16:9比例的图片
+       - 说明: 这些参数标记会自动从prompt中移除，不会影响实际的图片生成提示词
+
+    > 注意：n的取值范围[1,4], ratio取值范围"1:1"、"3:4"、"4:3"、"9:16" 和 "16:9"
 
 ## 📚 代码结构
 
@@ -190,16 +365,16 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 │   ├── middleware/         # 中间件
 │   │   └── request_logging_middleware.py  # 请求日志中间件
 │   ├── schemas/            # 数据模型
-│   │   ├── gemini_models.py  # Gemini 请求/响应模型
-│   │   └── openai_models.py  # OpenAI 请求/响应模型
+│   │   ├── gemini_models.py  # Gemini 原始请求/响应模型
+│   │   └── openai_models.py  # OpenAI 兼容请求/响应模型
 │   ├── services/           # 服务层
 │   │   ├── chat/           # 聊天相关服务
 │   │   │   ├── api_client.py # API 客户端
 │   │   │   ├── message_converter.py # 消息转换器
 │   │   │   ├── response_handler.py # 响应处理器
 │   │   │   └── retry_handler.py #重试处理器
-│   │   ├── gemini_chat_service.py   # Gemini 聊天服务
-│   │   ├── openai_chat_service.py   # OpenAI 聊天服务
+│   │   ├── gemini_chat_service.py   # Gemini 原始聊天服务
+│   │   ├── openai_chat_service.py   # OpenAI 兼容聊天服务
 │   │   ├── embedding_service.py # 向量服务
 │   │   ├── key_manager.py    # API Key 管理
 │   │   └── model_service.py  # 模型服务
@@ -250,6 +425,7 @@ A: 请检查以下几点：
 A: 在请求的 Body 中，将 `stream` 参数设置为 `true` 即可。
 
 **Q: 如何启用代码执行工具？**
+
 A: 在 `.env` 文件的 `TOOLS_CODE_EXECUTION_ENABLED` 变量中, 设置为 `true` 即可。
 
 ## 📄 许可证
